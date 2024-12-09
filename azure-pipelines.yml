@@ -1,0 +1,46 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  CLUSTER_URI: "https://practiceproblems.westus.kusto.windows.net"
+  DATABASE_NAME: "MyDatabase"
+
+steps:
+  # Step 1: Install Azure CLI
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
+
+  - script: |
+      pip install azure-kusto-data azure-kusto-ingest
+      echo "Dependencies installed."
+    displayName: "Install Python Dependencies"
+
+  # Step 2: Log in to Azure
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'AzureServiceConnection'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo "Logging in to Azure..."
+        az login --service-principal -u $(servicePrincipalId) -p $(servicePrincipalKey) --tenant $(tenantId)
+        echo "Logged in successfully."
+
+  # Step 3: Deploy KQL Functions
+  - script: |
+      echo "Deploying KQL Functions..."
+      for file in kql-functions/*.kql; do
+        echo "Deploying $file"
+        az kusto query execute \
+          --cluster-name "$(CLUSTER_URI)" \
+          --database-name "$(DATABASE_NAME)" \
+          --file $file \
+          --query "$(cat $file)"
+      done
+      echo "KQL Functions deployed successfully."
+    displayName: "Deploy KQL Functions"

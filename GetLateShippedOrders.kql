@@ -1,0 +1,6 @@
+﻿.create-or-alter function GetLateShippedOrders()
+{
+    Orders
+    | where ShippedDate > RequiredDate
+    | project OrderID, CustomerID, OrderDate, RequiredDate, ShippedDate
+}

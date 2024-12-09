@@ -1,0 +1,9 @@
+﻿.create-or-alter function GetTopCustomersBySales(topN:int)
+{
+    Orders
+    | join kind=inner (OrderDetails | summarize TotalSales = sum(UnitPrice * Quantity) by OrderID) on $left.OrderID == $right.OrderID
+    | summarize TotalSales = sum(TotalSales) by CustomerID
+    | join kind=inner Customers on $left.CustomerID == $right.CustomerID
+    | top topN by TotalSales desc
+    | project CustomerID, CompanyName, TotalSales
+}

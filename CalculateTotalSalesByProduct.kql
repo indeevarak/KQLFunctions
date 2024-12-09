@@ -1,0 +1,8 @@
+﻿.create-or-alter function CalculateTotalSalesByProduct()
+{
+    OrderDetails
+    | summarize TotalSales = sum(UnitPrice * Quantity) by ProductID
+    | join kind=inner Products on $left.ProductID == $right.ProductID
+    | project ProductID, ProductName, TotalSales
+}
+
